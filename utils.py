@@ -177,6 +177,32 @@ def comp_received(df):
     else:
         print("There is no difference between the amounts of compliments recieved for winning and losing games")
 
+def points_win(df):
+    '''
+    Determine if more points were scored during winning games
+    Parameters df: data frame to be analyzed
+    Returns: N/A
+    '''
+    #Organize data
+    points_win = df[df['W/L']==1]['Points']
+    print("Average points scored for winning games: ", round(points_win.mean(), 2))
+    points_win = points_win.values.tolist()
+    points_loss = df[df['W/L']==0]['Points']
+    print("Average points scored for losing games: ", round(points_loss.mean(), 2))
+    points_loss = points_loss.values.tolist()
+
+    #Perfrom test with scipy
+    from scipy import stats
+    t, p_val = stats.ttest_ind(points_win, points_loss)
+    p_val /= 2
+    alpha = 0.01
+    if (t > 0 and p_val < alpha):
+        print("Jovan scored more points during winning games")
+    elif (t < 0 and p_val < alpha):
+        print("Jovan scored less points during winning games")
+    else:
+        print("There is no difference between the amount of points scored during winning and losing games")
+
 def visualize(df):
     '''
     Visualize Final project data
@@ -316,6 +342,16 @@ def tree(X_train, y_train, X_test, y_test, X):
     plt.figure()
     plt.figure(figsize = (15,10))
     t = plot_tree(tree, feature_names=X.columns, class_names={1: "Win", 0: "Loss"}, filled=True, fontsize=10)
+
+def add_weather(df):
+    lat, lng = get_lat_lng("Spokane")
+    station_ID = get_weather_station_ID(lat, lng)
+    weather_df = get_daily_weather_data(station_ID)
+    weather_df = pd.json_normalize(weather_df)
+    weather_df = weather_df[['date', 'tavg']]
+    df = pd.merge(df, weather_df, on ='date')
+    
+    return df
 
 def kNN(X_train, y_train, X_test, y_test):
     '''
